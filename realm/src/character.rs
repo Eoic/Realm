@@ -1,6 +1,8 @@
 use std::cmp::{max, min};
 use std::fmt::{Display, Formatter};
 
+use crate::items::inventory::{self, Inventory};
+
 const A: u32 = 20;
 const B: u32 = 70;
 const C: u32 = 100;
@@ -18,6 +20,7 @@ pub struct Character {
     max_mana: u32,
     level: u32,
     experience: u32,
+    pub inventory: Inventory,
     class: CharacterClass,
 }
 
@@ -94,7 +97,7 @@ impl Character {
 
 impl Display for Character {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "| {:-<80} |\n", "")?;
+        write!(formatter, "|-{:-<80}-|\n", "")?;
 
         write!(
             formatter,
@@ -102,7 +105,7 @@ impl Display for Character {
             format!("{} the {}", self.name, self.class)
         )?;
 
-        write!(formatter, "| {:-<80} |\n", "")?;
+        write!(formatter, "|-{:-<80}-|\n", "")?;
 
         write!(
             formatter,
@@ -131,7 +134,10 @@ impl Display for Character {
             "Mana",
             format!("{} / {}", self.mana, self.max_mana)
         )?;
-        write!(formatter, "| {:-<80} |\n", "")
+
+        self.inventory.display();
+
+        write!(formatter, "|-{:-<80}-|\n", "")
     }
 }
 
@@ -145,6 +151,7 @@ impl Default for Character {
             max_health: 100,
             mana: 100,
             max_mana: 100,
+            inventory: Inventory::new(20),
             class: CharacterClass::Warrior,
         }
     }
@@ -158,4 +165,3 @@ impl Display for CharacterClass {
         }
     }
 }
-
