@@ -1,4 +1,4 @@
-use std::cmp::{min, max};
+use std::cmp::{max, min};
 use std::fmt::{Display, Formatter};
 
 const A: u32 = 20;
@@ -34,6 +34,7 @@ impl Character {
             name,
             health: 120,
             max_health: 120,
+            class: CharacterClass::Warrior,
             ..Default::default()
         }
     }
@@ -43,6 +44,7 @@ impl Character {
             name,
             mana: 120,
             max_mana: 120,
+            class: CharacterClass::Mage,
             ..Default::default()
         }
     }
@@ -51,12 +53,22 @@ impl Character {
         (A * self.level * self.level + B * self.level + C) as u64
     }
 
-    fn change_health(&mut self, amount: u32) {
-        self.health = max(0, min(self.health - amount, self.max_health));
+    pub fn change_health(&mut self, amount: u32) {
+        if amount > self.health {
+            self.health = 0;
+            return;
+        }
+
+        self.health -= amount;
     }
 
-    fn change_mana(&mut self, amount: u32) {
-        self.mana = max(0, min(self.mana - amount, self.max_mana));
+    pub fn change_mana(&mut self, amount: u32) {
+        if amount >= self.mana {
+            self.mana = 0;
+            return;
+        }
+
+        self.mana -= amount;
     }
 
     pub fn record_exp(&mut self, amount: u32) {
@@ -67,7 +79,7 @@ impl Character {
         let xp = self.experience as i128;
 
         if amount <= 0 {
-            return
+            return;
         }
 
         let d_i128 = b * b + 4 * a * (xp - c);
@@ -83,12 +95,42 @@ impl Character {
 impl Display for Character {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(formatter, "| {:-<80} |\n", "")?;
-        write!(formatter, "| {:^80} |\n", format!("{} the {}", self.name, self.class))?;
+
+        write!(
+            formatter,
+            "| {:^80} |\n",
+            format!("{} the {}", self.name, self.class)
+        )?;
+
         write!(formatter, "| {:-<80} |\n", "")?;
-        write!(formatter, "| {:<12}{:<68} |\n", "Level:", format!("{}", self.level))?;
-        write!(formatter, "| {:<12}{:<68} |\n", "Experience", format!("{} / {}", self.experience, self.required_exp()))?;
-        write!(formatter, "| {:<12}{:<68} |\n", "Health", format!("{} / {}", self.health, self.max_health))?;
-        write!(formatter, "| {:<12}{:<68} |\n", "Mana", format!("{} / {}", self.mana, self.max_mana))?;
+
+        write!(
+            formatter,
+            "| {:<12}{:<68} |\n",
+            "Level:",
+            format!("{}", self.level)
+        )?;
+
+        write!(
+            formatter,
+            "| {:<12}{:<68} |\n",
+            "Experience",
+            format!("{} / {}", self.experience, self.required_exp())
+        )?;
+
+        write!(
+            formatter,
+            "| {:<12}{:<68} |\n",
+            "Health",
+            format!("{} / {}", self.health, self.max_health)
+        )?;
+
+        write!(
+            formatter,
+            "| {:<12}{:<68} |\n",
+            "Mana",
+            format!("{} / {}", self.mana, self.max_mana)
+        )?;
         write!(formatter, "| {:-<80} |\n", "")
     }
 }
@@ -116,3 +158,4 @@ impl Display for CharacterClass {
         }
     }
 }
+
