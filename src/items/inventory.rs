@@ -1,5 +1,5 @@
 use crate::items::database::{ItemTemplateId, get_database};
-use std::hash::Hash;
+use std::{collections::HashMap, hash::Hash};
 use uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -42,6 +42,7 @@ enum ItemKind {
 #[derive(Debug, Clone)]
 pub enum ItemState {
     None,
+    Equipment { wear: u8 },
     Potion { fill: u32 },
     Currency { count: u64 },
 }
@@ -142,25 +143,143 @@ impl Inventory {
             return;
         }
 
-        for (index, item) in self.items.iter().enumerate() {
-            println!(
-                "| {:<80} |",
-                format!(
-                    "{}. {} ({})",
-                    index + 1,
-                    get_database().template(&item).name,
-                    self.count_stack(&item),
-                )
-            )
+        let mut stacked: HashMap<ItemTemplateId, u64> = HashMap::new();
+
+        for item in self.items.iter() {
+            if get_database().template(&item).unwrap().stackable {
+                stacked
+                    .entry(item.template_id)
+                    .and_modify(|count| *count += 1)
+                    .or_insert(1);
+            }
+        }
+
+        let sortable: Vec<(&Item, Option<u64>)> = self
+            .items
+            .iter()
+            .flat_map(|item| {
+                if stacked.contains_key(&item.template_id) {
+                    vec![(item, stacked.remove(&item.template_id))]
+                } else {
+                    if !get_database().template(item).unwrap().stackable {
+                        vec![(item, None)]
+                    } else {
+                        vec![]
+                    }
+                }
+            })
+            .collect();
+
+        for (index, (item, count)) in sortable.iter().enumerate() {
+            let name = get_database()
+                .template(item)
+                .map(|template| template.name.as_str())
+                .unwrap_or("Unknown");
+
+            let line = match count {
+                Some(value) => format!("{} ({})", name, value),
+                None => format!("{}", name),
+            };
+
+            println!("| {:<80} |", format!("{}. {}", index + 1, line))
         }
 
         println!("|-{:-<80}-|", "");
     }
 
-    pub fn weight(&self) {
+    pub fn weight(&self) -> u64 {
         self.items
             .iter()
-            .map(|item| get_database().template(&item).weight)
-            .sum::<u64>();
+            .filter_map(|item| get_database().template(item).map(|t| t.weight))
+            .sum()
+    }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.capacity
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.items.len() >= self.capacity
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::items::database::ItemTemplateId;
+
+    fn create_test_item(template_id: ItemTemplateId) -> Item {
+        Item::new(ItemId::new(), template_id, ItemState::None)
+    }
+
+    #[test]
+    fn test_inventory_new() {
+        let inv = Inventory::new(10);
+        assert_eq!(inv.capacity(), 10);
+        assert!(inv.is_empty());
+        assert_eq!(inv.len(), 0);
+    }
+
+    #[test]
+    fn test_inventory_add() {
+        let mut inv = Inventory::new(5);
+        let item = create_test_item(1);
+        assert!(inv.add(item));
+        assert_eq!(inv.len(), 1);
+        assert!(!inv.is_empty());
+    }
+
+    #[test]
+    fn test_inventory_full() {
+        let mut inv = Inventory::new(2);
+        assert!(inv.add(create_test_item(1)));
+        assert!(inv.add(create_test_item(2)));
+        assert!(inv.is_full());
+        assert!(!inv.add(create_test_item(3)));
+        assert_eq!(inv.len(), 2);
+    }
+
+    #[test]
+    fn test_inventory_drop() {
+        let mut inv = Inventory::new(5);
+        let item = create_test_item(1);
+        let item_id = item.id;
+        inv.add(item);
+        assert_eq!(inv.len(), 1);
+        assert!(inv.drop(item_id));
+        assert!(inv.is_empty());
+    }
+
+    #[test]
+    fn test_inventory_drop_nonexistent() {
+        let mut inv = Inventory::new(5);
+        let fake_id = ItemId::new();
+        assert!(!inv.drop(fake_id));
+    }
+
+    #[test]
+    fn test_item_equality() {
+        let id = ItemId::new();
+        let item1 = Item::new(id, 1, ItemState::None);
+        let item2 = Item::new(id, 1, ItemState::None);
+        let item3 = Item::new(ItemId::new(), 1, ItemState::None);
+
+        assert_eq!(item1, item2);
+        assert_ne!(item1, item3);
+    }
+
+    #[test]
+    fn test_item_id_unique() {
+        let id1 = ItemId::new();
+        let id2 = ItemId::new();
+        assert_ne!(id1, id2);
     }
 }

@@ -1,0 +1,34 @@
+[[items]]
+id = 1
+name = "Rusty Sword"
+alias = "rusty sword"
+description = "Barely sharp."
+weight = 5
+stackable = false
+
+[items.kind]
+type = "Weapon"
+damage = 12
+
+[[items]]
+id = 2
+name = "Health Potion"
+alias = "health potion"
+description = "Restores HP."
+weight = 1
+stackable = true
+
+[items.kind]
+type = "Potion"
+capacity = 100
+
+[[items]]
+id = 3
+name = "Gold"
+alias = "gold"
+description = "Coins."
+weight = 0
+stackable = true
+
+[items.kind]
+type = "Currency"

@@ -55,6 +55,10 @@ impl Character {
         (A * self.level * self.level + B * self.level + C) as u64
     }
 
+    pub fn level(&self) -> u32 {
+        self.level
+    }
+
     pub fn change_health(&mut self, amount: u32) {
         if amount > self.health {
             self.health = 0;
@@ -162,5 +166,90 @@ impl Display for CharacterClass {
             Self::Warrior => write!(formatter, "Warrior"),
             Self::Mage => write!(formatter, "Mage"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_warrior_creation() {
+        let warrior = Character::new("TestWarrior".to_string(), CharacterClass::Warrior);
+        assert_eq!(warrior.health, 120);
+        assert_eq!(warrior.max_health, 120);
+        assert_eq!(warrior.level, 1);
+    }
+
+    #[test]
+    fn test_mage_creation() {
+        let mage = Character::new("TestMage".to_string(), CharacterClass::Mage);
+        assert_eq!(mage.mana, 120);
+        assert_eq!(mage.max_mana, 120);
+        assert_eq!(mage.level, 1);
+    }
+
+    #[test]
+    fn test_change_health() {
+        let mut character = Character::new("Test".to_string(), CharacterClass::Warrior);
+        let initial = character.health;
+        character.change_health(10);
+        assert_eq!(character.health, initial - 10);
+    }
+
+    #[test]
+    fn test_change_health_overflow() {
+        let mut character = Character::new("Test".to_string(), CharacterClass::Warrior);
+        character.change_health(1000); // More than max health
+        assert_eq!(character.health, 0);
+    }
+
+    #[test]
+    fn test_change_mana() {
+        let mut character = Character::new("Test".to_string(), CharacterClass::Mage);
+        let initial = character.mana;
+        character.change_mana(10);
+        assert_eq!(character.mana, initial - 10);
+    }
+
+    #[test]
+    fn test_change_mana_overflow() {
+        let mut character = Character::new("Test".to_string(), CharacterClass::Mage);
+        character.change_mana(1000); // More than max mana
+        assert_eq!(character.mana, 0);
+    }
+
+    #[test]
+    fn test_record_exp_level_up() {
+        let mut character = Character::new("Test".to_string(), CharacterClass::Warrior);
+        assert_eq!(character.level, 1);
+
+        // Level 2 requires: 20*1*1 + 70*1 + 100 = 190 XP
+        character.record_exp(190);
+        assert_eq!(character.level, 2);
+    }
+
+    #[test]
+    fn test_record_exp_multiple_levels() {
+        let mut character = Character::new("Test".to_string(), CharacterClass::Warrior);
+
+        // Give enough XP to reach level 5
+        character.record_exp(2000);
+        assert!(character.level >= 5);
+    }
+
+    #[test]
+    fn test_default_character() {
+        let character = Character::default();
+        assert_eq!(character.name, "Default");
+        assert_eq!(character.level, 1);
+        assert_eq!(character.health, 100);
+        assert_eq!(character.mana, 100);
+    }
+
+    #[test]
+    fn test_character_class_display() {
+        assert_eq!(format!("{}", CharacterClass::Warrior), "Warrior");
+        assert_eq!(format!("{}", CharacterClass::Mage), "Mage");
     }
 }
