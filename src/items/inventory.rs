@@ -1,6 +1,5 @@
 use crate::items::database::{ItemTemplateId, get_database};
-use std::cmp::Ordering;
-use std::{collections::HashMap, hash::Hash};
+use std::hash::Hash;
 use uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

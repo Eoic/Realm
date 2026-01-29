@@ -1,13 +1,12 @@
-use crate::{
-    character::{Character, CharacterClass},
-    items::{
-        database::{ItemKindTemplate, ItemTemplate, ItemsDatabase, create_database, get_database},
-        inventory::ItemState,
-    },
-};
-
 mod character;
 mod items;
+
+use crate::items::{
+    database::{ItemKindTemplate, ItemTemplate, ItemsDatabase, create_database, get_database},
+    inventory::ItemState,
+};
+
+use crate::character::{Character, CharacterClass};
 
 fn main() {
     let mut warrior = Character::new("Eoic".to_string(), CharacterClass::Warrior);

@@ -1,7 +1,6 @@
-use std::cmp::{max, min};
 use std::fmt::{Display, Formatter};
 
-use crate::items::inventory::{self, Inventory};
+use crate::items::inventory::Inventory;
 
 const A: u32 = 20;
 const B: u32 = 70;
