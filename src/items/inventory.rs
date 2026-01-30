@@ -1,4 +1,6 @@
-use crate::items::database::{ItemTemplateId, get_database};
+use crate::items::database::{ItemTemplateId, get_database, get_item_template};
+use std::error::Error;
+use std::rc::Rc;
 use std::{collections::HashMap, hash::Hash};
 use uuid;
 
@@ -92,7 +94,7 @@ impl PartialOrd for Item {
 
 pub struct Inventory {
     capacity: usize,
-    items: Vec<Item>,
+    items: Vec<Rc<Item>>,
 }
 
 impl Inventory {
@@ -108,7 +110,7 @@ impl Inventory {
             return false;
         }
 
-        self.items.push(item);
+        self.items.push(Rc::new(item));
         true
     }
 
@@ -124,7 +126,7 @@ impl Inventory {
         let needle = self
             .items
             .iter()
-            .position(|target: &Item| target.id == item_id);
+            .position(|target: &Rc<Item>| target.id == item_id);
 
         if let Some(index) = needle {
             self.items.remove(index);
@@ -132,6 +134,18 @@ impl Inventory {
         }
 
         false
+    }
+
+    pub fn find(&self, name: &str) -> Result<Rc<Item>, InventoryError> {
+        let target = self
+            .items
+            .iter()
+            .find(|&item| get_item_template(&item).unwrap().name == name);
+
+        match target {
+            Some(target) => Ok(Rc::clone(&target)),
+            None => Err(InventoryError::ItemNotFound),
+        }
     }
 
     pub fn display(&self) {
@@ -154,7 +168,7 @@ impl Inventory {
             }
         }
 
-        let sortable: Vec<(&Item, Option<u64>)> = self
+        let sortable: Vec<(&Rc<Item>, Option<u64>)> = self
             .items
             .iter()
             .flat_map(|item| {
@@ -209,6 +223,10 @@ impl Inventory {
     pub fn is_full(&self) -> bool {
         self.items.len() >= self.capacity
     }
+}
+
+pub enum InventoryError {
+    ItemNotFound,
 }
 
 #[cfg(test)]

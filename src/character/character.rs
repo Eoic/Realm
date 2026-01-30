@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use crate::items::inventory::Inventory;
+use crate::items::{equipment::Equipment, inventory::Inventory};
 
 const A: u32 = 20;
 const B: u32 = 70;
@@ -19,8 +19,9 @@ pub struct Character {
     max_mana: u32,
     level: u32,
     experience: u32,
-    pub inventory: Inventory,
     class: CharacterClass,
+    pub inventory: Inventory,
+    pub equipment: Equipment,
 }
 
 impl Character {
@@ -49,6 +50,11 @@ impl Character {
             class: CharacterClass::Mage,
             ..Default::default()
         }
+    }
+
+    pub fn display(&self) {
+        self.inventory.display();
+        self.equipment.display();
     }
 
     fn required_exp(self: &Self) -> u64 {
@@ -155,6 +161,7 @@ impl Default for Character {
             mana: 100,
             max_mana: 100,
             inventory: Inventory::new(20),
+            equipment: Equipment::new(),
             class: CharacterClass::Warrior,
         }
     }
@@ -200,7 +207,7 @@ mod tests {
     #[test]
     fn test_change_health_overflow() {
         let mut character = Character::new("Test".to_string(), CharacterClass::Warrior);
-        character.change_health(1000); // More than max health
+        character.change_health(1000);
         assert_eq!(character.health, 0);
     }
 
@@ -215,7 +222,7 @@ mod tests {
     #[test]
     fn test_change_mana_overflow() {
         let mut character = Character::new("Test".to_string(), CharacterClass::Mage);
-        character.change_mana(1000); // More than max mana
+        character.change_mana(1000);
         assert_eq!(character.mana, 0);
     }
 
@@ -223,8 +230,6 @@ mod tests {
     fn test_record_exp_level_up() {
         let mut character = Character::new("Test".to_string(), CharacterClass::Warrior);
         assert_eq!(character.level, 1);
-
-        // Level 2 requires: 20*1*1 + 70*1 + 100 = 190 XP
         character.record_exp(190);
         assert_eq!(character.level, 2);
     }
@@ -232,8 +237,6 @@ mod tests {
     #[test]
     fn test_record_exp_multiple_levels() {
         let mut character = Character::new("Test".to_string(), CharacterClass::Warrior);
-
-        // Give enough XP to reach level 5
         character.record_exp(2000);
         assert!(character.level >= 5);
     }

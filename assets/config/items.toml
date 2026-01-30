@@ -3,6 +3,7 @@ id = 1
 name = "Rusty Sword"
 alias = "rusty sword"
 description = "Barely sharp."
+slots = ["left hand", "right hand"]
 weight = 5
 stackable = false
 
@@ -15,6 +16,7 @@ id = 2
 name = "Health Potion"
 alias = "health potion"
 description = "Restores HP."
+slots = []
 weight = 1
 stackable = true
 

@@ -105,6 +105,10 @@ pub fn get_database() -> &'static ItemsDatabase {
     DATABASE.get().expect("Database is not initialized yet.")
 }
 
+pub fn get_item_template(item: &Item) -> Option<&ItemTemplate> {
+    get_database().template(item)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
